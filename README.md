@@ -64,7 +64,7 @@ playwright-conduit-e2e/
 
 ### 1. Clone Repository
 ```bash
-git clone [https://github.com/mib03/playwright-conduit-e2e.git](https://github.com/mib03/playwright-conduit-e2e.git)
+git clone https://github.com/mib03/playwright-conduit-e2e.git
 cd playwright-conduit-e2e
 ```
 
