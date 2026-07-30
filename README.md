@@ -11,7 +11,7 @@ This framework demonstrates production-grade test automation architecture, prior
 
 ---
 
-## 🚀 Key Framework Features
+## Key Framework Features
 
 * **Page Object Model (POM) Architecture**
   Clean abstraction layer separating UI locators/actions (`/pages`) from execution logic and assertions (`/tests`).
@@ -24,7 +24,7 @@ This framework demonstrates production-grade test automation architecture, prior
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 | Technology | Purpose |
 | :--- | :--- |
@@ -35,7 +35,7 @@ This framework demonstrates production-grade test automation architecture, prior
 
 ---
 
-## 📂 Project Structure
+## Project Structure
 
 ```text
 playwright-conduit-e2e/
@@ -60,7 +60,7 @@ playwright-conduit-e2e/
 
 ---
 
-## 💻 Local Setup & Execution
+## Local Setup & Execution
 
 ### 1. Clone Repository
 ```bash
@@ -98,7 +98,7 @@ npx playwright show-report
 
 ---
 
-## 📝 Test Scenarios Overview
+## Test Scenarios Overview
 
 1. **Scenario 1: Authentication & User Session Management (`scenario1_auth.spec.ts`)**
    * Validates registration flow using dynamic Faker data.
