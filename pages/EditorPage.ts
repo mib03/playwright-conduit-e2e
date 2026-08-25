@@ -1,7 +1,7 @@
-import {Page, Locator} from '@playwright/test';
+import { Page, Locator } from '@playwright/test';
+import { BasePage } from './BasePage';
 
-export class EditorPage {
-    readonly page: Page;
+export class EditorPage extends BasePage {
     readonly titleInput: Locator;
     readonly descriptionInput: Locator;
     readonly bodyInput: Locator;
@@ -9,7 +9,7 @@ export class EditorPage {
     readonly publishButton: Locator;
 
     constructor(page: Page) {
-        this.page = page;
+        super(page);
         this.titleInput = page.getByPlaceholder('Article Title');
         this.descriptionInput = page.getByPlaceholder("What's this article about?");
         this.bodyInput = page.getByPlaceholder('Write your article (in markdown)');

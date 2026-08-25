@@ -1,22 +1,24 @@
-import {Page, Locator} from '@playwright/test';
+import { Page, Locator } from '@playwright/test';
+import { BasePage } from './BasePage';
 
-export class NavigationPage {
-    readonly page: Page;
+export class NavigationPage extends BasePage {
     readonly signInLink: Locator;
     readonly signUpLink: Locator;
     readonly settingsLink: Locator;
     readonly yourFeedTab: Locator;
+    readonly newArticleLink: Locator;
 
     constructor(page: Page) {
-        this.page = page;
+        super(page);
         this.signInLink = page.getByRole('link', { name: 'Sign in' });
         this.signUpLink = page.getByRole('link', { name: 'Sign up' });
         this.settingsLink = page.getByRole('link', { name: 'Settings' });
         this.yourFeedTab = page.getByText('Your Feed');
+        this.newArticleLink = page.getByRole('link', { name: 'New Article' });
     }
 
     async gotoHome() {
-        await this.page.goto('https://conduit.bondaracademy.com/');
+        await this.page.goto('/');
     }
 
     async clickSignIn() {

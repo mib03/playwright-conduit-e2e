@@ -1,11 +1,11 @@
-import {Page, Locator} from '@playwright/test';
+import { Page, Locator } from '@playwright/test';
+import { BasePage } from './BasePage';
 
-export class SettingsPage {
-    readonly page: Page;
+export class SettingsPage extends BasePage {
     readonly logoutButton: Locator;
 
     constructor(page: Page) {
-        this.page = page;
+        super(page);
         this.logoutButton = page.getByRole('button', { name: /logout/i });
     }
 

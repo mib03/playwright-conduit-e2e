@@ -1,122 +1,147 @@
-# Playwright End-to-End & API Mocking Framework (Conduit RealWorld App)
+# Playwright Conduit E2E
 
-![Playwright Tests](https://github.com/mib03/playwright-conduit-e2e/actions/workflows/playwright.yml/badge.svg)
-![Playwright Version](https://img.shields.io/badge/playwright-v1.40+-green)
-![TypeScript](https://img.shields.io/badge/typescript-v5.0+-blue)
-![License](https://img.shields.io/badge/license-MIT-brightgreen)
+End-to-end tests for the Conduit RealWorld application using Playwright,
+TypeScript, Page Object Model, API authentication, and network mocking.
 
-Automated End-to-End (E2E) test suite for the Conduit RealWorld Application, built with **Playwright**, **TypeScript**, and **GitHub Actions**. 
+## Requirements and Installation
 
-This framework demonstrates production-grade test automation architecture, prioritizing modularity, high execution efficiency, and robust UI resilience testing.
+- Node.js 18 or newer
+- npm
 
----
-
-## Key Framework Features
-
-* **Page Object Model (POM) Architecture**
-  Clean abstraction layer separating UI locators/actions (`/pages`) from execution logic and assertions (`/tests`).
-* **Fast Authentication State Injection (API Bypass)**
-  Accelerates test execution by ~80% by bypassing slow UI login forms and directly injecting JWT tokens into browser `localStorage` via API requests (`page.addInitScript`).
-* **Network Interception & API Mocking (`page.route`)**
-  Simulates frontend resilience against backend failure modes—such as **500 Internal Server Error**, empty states, and validation errors—without modifying database state.
-* **Automated CI/CD Pipeline**
-  Fully integrated GitHub Actions workflow running headless Chromium tests on every `push` or `pull_request` to the `main` branch.
-
----
-
-## Tech Stack
-
-| Technology | Purpose |
-| :--- | :--- |
-| **Playwright** | Core E2E Testing Framework |
-| **TypeScript** | Strongly Typed Automation Scripting |
-| **Faker JS (`@faker-js/faker`)** | Dynamic Data Generation |
-| **GitHub Actions** | CI/CD Automated Execution |
-
----
-
-## Project Structure
-
-```text
-playwright-conduit-e2e/
-├── .github/
-│   └── workflows/
-│       └── playwright.yml         # CI/CD GitHub Actions Pipeline
-├── pages/                         # Page Object Model Layer
-│   ├── ArticlePage.ts             # Article detail view & deletion
-│   ├── EditorPage.ts              # Article creation form
-│   ├── LoginPage.ts               # Login form interactions
-│   ├── NavigationPage.ts          # Global header & navigation links
-│   ├── RegisterPage.ts            # Registration form interactions
-│   └── SettingsPage.ts            # Settings page & logout actions
-├── tests/                         # Test Execution & Assertion Layer
-│   ├── scenario1_auth.spec.ts     # Registration, UI Login, JWT Validation & Logout
-│   ├── scenario2_article.spec.ts  # CRUD Operations (API Bypass Login)
-│   └── scenario3_mocking.spec.ts  # Network Interception (500 Error & Empty States)
-├── package.json                   # Dependencies & Scripts
-├── playwright.config.ts           # Playwright Test Runner Config
-└── README.md                      # Project Documentation
-```
-
----
-
-## Local Setup & Execution
-
-### 1. Clone Repository
-```bash
-git clone https://github.com/mib03/playwright-conduit-e2e.git
-cd playwright-conduit-e2e
-```
-
-### 2. Install Dependencies & Browsers
 ```bash
 npm install
-npx playwright install --with-deps
+npx playwright install
 ```
 
-### 3. Run Tests
+## Commands
 
-* **Run all tests in Headless Mode:**
-  ```bash
-  npx playwright test
-  ```
-
-* **Run tests in Interactive UI Mode:**
-  ```bash
-  npx playwright test --ui
-  ```
-
-* **Run a specific test file:**
-  ```bash
-  npx playwright test tests/scenario2_article.spec.ts --ui
-  ```
-
-### 4. View Test Reports
 ```bash
+npm test
+npx playwright test tests/scenario2_article.spec.ts
+npx playwright test --project=chromium
+npx playwright test --ui
+npx playwright test --list
 npx playwright show-report
 ```
 
----
+Allure reports:
 
-## Test Scenarios Overview
+```bash
+npm run allure:generate
+npm run allure:open
+```
 
-1. **Scenario 1: Authentication & User Session Management (`scenario1_auth.spec.ts`)**
-   * Validates registration flow using dynamic Faker data.
-   * Verifies login functionality and inspects browser `localStorage` for JWT token presence.
-   * Tests logout mechanism and verifies session token invalidation.
+## Structure
 
-2. **Scenario 2: Article Lifecycle with State Injection (`scenario2_article.spec.ts`)**
-   * Bypasses UI login by making a direct `POST` request to the auth API endpoint.
-   * Injects the returned JWT into local storage prior to navigation.
-   * Executes complete CRUD lifecycle (Create, Read, Delete article).
+```text
+playwright-conduit-e2e/
+├── pages/
+│   ├── ArticlePage.ts
+│   ├── BasePage.ts
+│   ├── EditorPage.ts
+│   ├── LoginPage.ts
+│   ├── NavigationPage.ts
+│   ├── RegisterPage.ts
+│   └── SettingsPage.ts
+├── src/fixtures/page-fixtures.ts
+├── tests/
+│   ├── scenario1_auth.spec.ts
+│   ├── scenario2_article.spec.ts
+│   └── scenario3_mocking.spec.ts
+├── playwright.config.ts
+├── package.json
+└── tsconfig.json
+```
 
-3. **Scenario 3: Network Interception & Fault Tolerance (`scenario3_mocking.spec.ts`)**
-   * Mocks `/api/articles` endpoints using `page.route()`.
-   * Verifies empty feed UI messaging when backend returns 0 records.
-   * Verifies frontend fault tolerance and fallback behavior during `500 Internal Server Error` scenarios.
+The architecture is:
 
----
+```text
+Test -> Fixture -> Page Object -> Playwright Page -> Conduit application
+```
 
-## 👤 Author
+All Page Objects extend `BasePage`. Shared browser helpers, including
+`localStorage` access, are defined once in that base class. Locators prefer
+accessible roles and meaningful placeholders.
 
-* **GitHub:** [@mib03](https://github.com/mib03)
+## Authentication Fixture
+
+`loggedInUser` authenticates through `POST /api/users/login`, reads the JWT,
+registers a `page.addInitScript()` handler, and then opens the home page. The
+script places the token in `localStorage` before the application starts, so the
+application renders its authenticated state immediately. Each test receives an
+isolated browser context.
+
+## Test Scenarios
+
+### Scenario 1: Authentication
+
+File: `tests/scenario1_auth.spec.ts`
+
+**Registers a new user through the UI**
+
+1. Generates unique credentials with Faker.
+2. Opens the registration page.
+3. Fills and submits the registration form.
+4. Verifies authenticated navigation appears afterward.
+
+**Verifies JWT authentication and clears the session on logout**
+
+1. Logs in through the UI.
+2. Verifies `Your Feed` is visible and login links are hidden.
+3. Verifies `jwtToken` exists in `localStorage`.
+4. Logs out from Settings.
+5. Verifies logged-out navigation and token removal.
+
+### Scenario 2: Article Lifecycle
+
+File: `tests/scenario2_article.spec.ts`
+
+**Creates, reads, and deletes an article with API-injected authentication**
+
+1. Uses `loggedInUser` to bypass the login form.
+2. Opens the New Article page.
+3. Creates an article with a unique title.
+4. Verifies the article title and body on the detail page.
+5. Deletes the article.
+6. Verifies the feed is displayed and the article is no longer visible.
+
+`EditorPage` handles article creation and `ArticlePage` handles detail and
+deletion, so the test now matches the suite name.
+
+### Scenario 3: Network Resilience
+
+File: `tests/scenario3_mocking.spec.ts`
+
+**Tags API returns HTTP 500**
+
+Mocks `GET /api/tags` with status `500`, verifies that status, and confirms the
+navigation remains usable. The current application does not render a dedicated
+tags error message.
+
+**Articles API is delayed by three seconds**
+
+Delays `GET /api/articles` for three seconds, continues the real request, and
+verifies the delay and successful response. The current application does not
+render an `.article-preview-loading` element, so the test checks observable
+network behavior instead.
+
+**Articles API returns no articles**
+
+Mocks a successful empty article response and verifies the
+`No articles are here... yet.` empty state.
+
+## Configuration
+
+`playwright.config.ts` runs each test in Chromium, Firefox, and WebKit. Local
+runs use Playwright's worker allocation; CI uses one worker and up to two
+retries. Traces are collected on the first retry. Both HTML and Allure reports
+are enabled.
+
+The project contains six test cases, executed across three browsers for 18 test
+runs. It targets the hosted environment:
+
+```text
+https://conduit.bondaracademy.com/
+```
+
+Hosted application availability or behavior changes can affect results.
