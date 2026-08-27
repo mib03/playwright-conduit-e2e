@@ -5,13 +5,17 @@ TypeScript, Page Object Model, API authentication, and network mocking.
 
 ## Requirements and Installation
 
-- Node.js 18 or newer
+- Node.js 20.19 or newer
 - npm
 
 ```bash
 npm install
 npx playwright install
+Copy-Item .env.example .env
 ```
+
+Set `TEST_USER_EMAIL` and `TEST_USER_PASSWORD` in `.env` before running tests.
+The `.env` file is ignored by Git and must never be committed.
 
 ## Commands
 
@@ -19,6 +23,8 @@ npx playwright install
 npm test
 npx playwright test tests/scenario2_article.spec.ts
 npx playwright test --project=chromium
+npm run test:smoke
+npm run test:ci
 npx playwright test --ui
 npx playwright test --list
 npx playwright show-report
@@ -30,6 +36,20 @@ Allure reports:
 npm run allure:generate
 npm run allure:open
 ```
+
+## Environment Variables
+
+| Variable | Purpose | Default |
+| --- | --- | --- |
+| `BASE_URL` | Web application URL | Hosted Conduit URL |
+| `API_URL` | API base URL | Hosted Conduit API URL |
+| `TEST_USER_EMAIL` | Existing test account email | Required |
+| `TEST_USER_PASSWORD` | Existing test account password | Required |
+
+The registration scenario is tagged `@destructive` because it creates a
+permanent user in the target environment. CI runs `npm run test:ci`, which
+excludes destructive scenarios and uses one worker with up to two retries. Run
+`npm test` only against an environment where test data creation is acceptable.
 
 ## Structure
 
@@ -43,6 +63,9 @@ playwright-conduit-e2e/
 │   ├── NavigationPage.ts
 │   ├── RegisterPage.ts
 │   └── SettingsPage.ts
+├── api/
+│   ├── ArticlesApi.ts
+│   └── AuthApi.ts
 ├── src/fixtures/page-fixtures.ts
 ├── tests/
 │   ├── scenario1_auth.spec.ts
@@ -65,7 +88,8 @@ accessible roles and meaningful placeholders.
 
 ## Authentication Fixture
 
-`loggedInUser` authenticates through `POST /api/users/login`, reads the JWT,
+`authToken` authenticates through the separated `AuthApi` client using
+`POST /api/users/login`, reads the JWT,
 registers a `page.addInitScript()` handler, and then opens the home page. The
 script places the token in `localStorage` before the application starts, so the
 application renders its authenticated state immediately. Each test receives an
@@ -106,7 +130,8 @@ File: `tests/scenario2_article.spec.ts`
 6. Verifies the feed is displayed and the article is no longer visible.
 
 `EditorPage` handles article creation and `ArticlePage` handles detail and
-deletion, so the test now matches the suite name.
+deletion. `ArticlesApi` creates, reads, and cleans up data for isolated
+read/delete tests, so the suite demonstrates a hybrid UI/API testing strategy.
 
 ### Scenario 3: Network Resilience
 
@@ -137,8 +162,13 @@ runs use Playwright's worker allocation; CI uses one worker and up to two
 retries. Traces are collected on the first retry. Both HTML and Allure reports
 are enabled.
 
-The project contains six test cases, executed across three browsers for 18 test
-runs. It targets the hosted environment:
+CI runs the TypeScript check before the browser suite and uploads the
+Playwright HTML report, test artifacts, raw Allure results, and generated Allure
+report as one workflow artifact.
+
+The project contains nine test cases, executed across three browsers for 27
+test runs. CI executes eight non-destructive test cases across three browsers.
+It targets the configured environment:
 
 ```text
 https://conduit.bondaracademy.com/

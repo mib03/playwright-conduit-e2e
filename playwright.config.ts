@@ -1,8 +1,8 @@
+import 'dotenv/config';
 import { defineConfig, devices } from '@playwright/test';
+import { appBaseUrl } from './src/config/test-config';
 
-const isCI = Boolean(
-  (globalThis as { process?: { env?: { CI?: string } } }).process?.env?.CI,
-);
+const isCI = process.env.CI === 'true';
 
 /**
  * Read environment variables from file.
@@ -36,7 +36,7 @@ export default defineConfig({
   ],
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
-    baseURL: 'https://conduit.bondaracademy.com',
+    baseURL: appBaseUrl,
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',

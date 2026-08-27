@@ -5,6 +5,10 @@ import { LoginPage } from '../../pages/LoginPage';
 import { SettingsPage } from '../../pages/SettingsPage';
 import { EditorPage } from '../../pages/EditorPage';
 import { ArticlePage } from '../../pages/ArticlePage';
+import { AuthApi } from '../../api/AuthApi';
+import { ArticlesApi } from '../../api/ArticlesApi';
+import { Article } from '../../api/ArticlesApi';
+import { apiBaseUrl, appBaseUrl, getTestCredentials } from '../config/test-config';
 
 type ConduitPages = {
     navPage: NavigationPage;
@@ -13,7 +17,11 @@ type ConduitPages = {
     settingsPage: SettingsPage;
     editorPage: EditorPage;
     articlePage: ArticlePage;
-    loggedInUser: void;
+    authToken: string;
+    articlesApi: ArticlesApi;
+    articleCleanup: {
+        track: (article: Article) => void;
+    };
 };
 
 export const test = base.extend<ConduitPages>({
@@ -36,23 +44,31 @@ export const test = base.extend<ConduitPages>({
         await use(new ArticlePage(page));
     },
 
-    loggedInUser: async ({ page, request }, use) => {
-        const response = await request.post('https://conduit-api.bondaracademy.com/api/users/login', {
-            data: {
-                user: { email: 'qa_xl_test@mail.com', password: 'Password123!' }
-            }
-        });
-
-        expect(response.status()).toBe(200);
-        const { user } = await response.json();
+    authToken: async ({ page, request }, use) => {
+        const authApi = new AuthApi(request, apiBaseUrl);
+        const token = await authApi.login(getTestCredentials());
 
         await page.addInitScript((jwt) => {
             window.localStorage.setItem('jwtToken', jwt);
-        }, user.token);
-        await page.goto('https://conduit.bondaracademy.com/');
+        }, token);
+        await page.goto(appBaseUrl);
 
-        await use();
-    }
+        await use(token);
+    },
+    articlesApi: async ({ request, authToken }, use) => {
+        await use(new ArticlesApi(request, apiBaseUrl, authToken));
+    },
+    articleCleanup: async ({ articlesApi }, use) => {
+        const articles: Article[] = [];
+
+        await use({
+            track: (article) => articles.push(article),
+        });
+
+        for (const article of articles.reverse()) {
+            await articlesApi.delete(article.slug).catch(() => undefined);
+        }
+    },
 });
 
 export { expect };

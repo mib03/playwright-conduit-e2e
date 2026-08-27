@@ -1,9 +1,10 @@
 import { test, expect } from '../src/fixtures/page-fixtures';
 import { faker } from '@faker-js/faker';
+import { getTestCredentials } from '../src/config/test-config';
 
 test.describe("Scenario 1: Authentication and User Session Management", () => {
 
-  test('Registers a new user through the UI', async ({ navPage, registerPage }) => {
+  test('@destructive Registers a new user through the UI', async ({ navPage, registerPage }) => {
     const username = faker.internet.username();
     const email = faker.internet.email();
     const password = faker.internet.password();
@@ -16,14 +17,13 @@ test.describe("Scenario 1: Authentication and User Session Management", () => {
     await expect(navPage.signInLink).not.toBeVisible();
   });
 
-  test('Verifies JWT authentication and clears the session on logout', async ({ navPage, loginPage, settingsPage }) => {
+  test('@smoke Verifies JWT authentication and clears the session on logout', async ({ navPage, loginPage, settingsPage }) => {
 
-    const emailTest = 'qa_xl_test@mail.com';
-    const passwordTest = 'Password123!';
+    const { email, password } = getTestCredentials();
 
     await navPage.gotoHome();
     await navPage.clickSignIn();
-    await loginPage.login(emailTest, passwordTest);
+    await loginPage.login(email, password);
 
     await expect(navPage.yourFeedTab).toBeVisible();
     await expect(navPage.signInLink).not.toBeVisible();
@@ -41,5 +41,14 @@ test.describe("Scenario 1: Authentication and User Session Management", () => {
 
     const tokenAfterLogout = await loginPage.getLocalStorageItem('jwtToken');
     expect(tokenAfterLogout).toBeNull();
+  });
+
+  test('Rejects invalid login credentials', async ({ navPage, loginPage }) => {
+    await navPage.gotoHome();
+    await navPage.clickSignIn();
+    await loginPage.login('invalid-user@example.com', 'invalid-password');
+
+    await expect(loginPage.signInButton).toBeVisible();
+    await expect(navPage.yourFeedTab).not.toBeVisible();
   });
 });
