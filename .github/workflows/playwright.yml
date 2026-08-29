@@ -28,6 +28,17 @@ jobs:
     - name: Type-check project
       run: npm run typecheck
 
+    - name: Validate test configuration
+      env:
+        TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL }}
+        TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
+      run: |
+        if [ -z "$TEST_USER_EMAIL" ] || [ -z "$TEST_USER_PASSWORD" ]; then
+          echo "Missing required GitHub Actions secrets: TEST_USER_EMAIL and TEST_USER_PASSWORD"
+          echo "Add them in Settings > Secrets and variables > Actions for this repository."
+          exit 1
+        fi
+
     - name: Run Playwright tests
       env:
         BASE_URL: ${{ secrets.BASE_URL }}

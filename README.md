@@ -17,6 +17,18 @@ Copy-Item .env.example .env
 Set `TEST_USER_EMAIL` and `TEST_USER_PASSWORD` in `.env` before running tests.
 The `.env` file is ignored by Git and must never be committed.
 
+For GitHub Actions, add these repository secrets under **Settings > Secrets and
+variables > Actions**:
+
+- `TEST_USER_EMAIL`: email of an existing non-production test account
+- `TEST_USER_PASSWORD`: password of that test account
+- `BASE_URL`: optional application URL override
+- `API_URL`: optional API URL override
+
+Do not put credentials directly in the workflow file. Pull requests from forks
+do not receive repository secrets, so authenticated CI tests require a branch
+within the repository or a separately configured non-secret test environment.
+
 ## Commands
 
 ```bash
