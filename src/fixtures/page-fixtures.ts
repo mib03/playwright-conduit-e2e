@@ -66,7 +66,7 @@ export const test = base.extend<ConduitPages>({
         });
 
         for (const article of articles.reverse()) {
-            await articlesApi.delete(article.slug).catch(() => undefined);
+            await articlesApi.delete(article.slug, { ignoreNotFound: true });
         }
     },
 });

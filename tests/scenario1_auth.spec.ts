@@ -17,7 +17,7 @@ test.describe("Scenario 1: Authentication and User Session Management", () => {
     await expect(navPage.signInLink).not.toBeVisible();
   });
 
-  test('@smoke Verifies JWT authentication and clears the session on logout', async ({ navPage, loginPage, settingsPage }) => {
+  test('@smoke @auth Verifies JWT authentication and clears the session on logout', async ({ navPage, loginPage, settingsPage }) => {
 
     const { email, password } = getTestCredentials();
 
@@ -43,12 +43,13 @@ test.describe("Scenario 1: Authentication and User Session Management", () => {
     expect(tokenAfterLogout).toBeNull();
   });
 
-  test('Rejects invalid login credentials', async ({ navPage, loginPage }) => {
+  test('@auth Rejects invalid login credentials', async ({ navPage, loginPage }) => {
     await navPage.gotoHome();
     await navPage.clickSignIn();
     await loginPage.login('invalid-user@example.com', 'invalid-password');
 
     await expect(loginPage.signInButton).toBeVisible();
     await expect(navPage.yourFeedTab).not.toBeVisible();
+    await expect(loginPage.getLocalStorageItem('jwtToken')).resolves.toBeNull();
   });
 });

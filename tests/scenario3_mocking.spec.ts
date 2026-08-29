@@ -1,8 +1,9 @@
+import { Request } from '@playwright/test';
 import { test, expect } from '../src/fixtures/page-fixtures';
 
 test.describe('Scenario 3: Resilience & Network Interception Testing', () => {
 
-    test('Keeps the page usable when the tags API returns HTTP 500', async ({ page, navPage }) => {
+    test('@resilience Keeps the page usable when the tags API returns HTTP 500', async ({ page, navPage }) => {
         await page.route('**/api/tags', async (route) => {
             await route.fulfill({
                 status: 500,
@@ -20,12 +21,12 @@ test.describe('Scenario 3: Resilience & Network Interception Testing', () => {
         await expect(page.getByRole('navigation')).toBeVisible();
     });
 
-    test('Handles a three-second delay in the articles API', async ({ page, navPage }) => {
+    test('@resilience Handles a three-second delay in the articles API', async ({ page, navPage }) => {
         const delayMs = 3000;
-        let requestStartedAt = 0;
+        const requestStartedAt = new WeakMap<Request, number>();
 
         await page.route('**/api/articles*', async (route) => {
-            requestStartedAt = Date.now();
+            requestStartedAt.set(route.request(), Date.now());
             await new Promise((resolve) => setTimeout(resolve, delayMs));
             await route.continue();
         });
@@ -36,11 +37,13 @@ test.describe('Scenario 3: Resilience & Network Interception Testing', () => {
         await navPage.gotoHome();
 
         const articlesResponse = await delayedArticlesResponse;
-        expect(Date.now() - requestStartedAt).toBeGreaterThanOrEqual(delayMs);
+        const startedAt = requestStartedAt.get(articlesResponse.request());
+        expect(startedAt).toBeDefined();
+        expect(Date.now() - startedAt!).toBeGreaterThanOrEqual(delayMs);
         expect(articlesResponse.ok()).toBeTruthy();
     });
 
-    test('Shows the empty feed when the articles API returns no articles', async ({ page, navPage }) => {
+    test('@smoke @resilience Shows the empty feed when the articles API returns no articles', async ({ page, navPage }) => {
         await page.route('**/api/articles*', async (route) => {
             await route.fulfill({
                 status: 200,

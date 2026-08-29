@@ -25,6 +25,13 @@ npx playwright test tests/scenario2_article.spec.ts
 npx playwright test --project=chromium
 npm run test:smoke
 npm run test:ci
+npm run test:destructive
+npm run test:firefox
+npm run test:webkit
+npm run test:mobile
+npm run test:api
+npm run test:accessibility
+npm run test:report
 npx playwright test --ui
 npx playwright test --list
 npx playwright show-report
@@ -70,7 +77,10 @@ playwright-conduit-e2e/
 ├── tests/
 │   ├── scenario1_auth.spec.ts
 │   ├── scenario2_article.spec.ts
-│   └── scenario3_mocking.spec.ts
+│   ├── scenario3_mocking.spec.ts
+│   ├── api_articles.spec.ts
+│   ├── accessibility.spec.ts
+│   └── mobile_smoke.spec.ts
 ├── playwright.config.ts
 ├── package.json
 └── tsconfig.json
@@ -122,7 +132,7 @@ File: `tests/scenario2_article.spec.ts`
 
 **Creates, reads, and deletes an article with API-injected authentication**
 
-1. Uses `loggedInUser` to bypass the login form.
+1. Uses the `authToken` fixture to bypass the login form.
 2. Opens the New Article page.
 3. Creates an article with a unique title.
 4. Verifies the article title and body on the detail page.
@@ -157,17 +167,26 @@ Mocks a successful empty article response and verifies the
 
 ## Configuration
 
-`playwright.config.ts` runs each test in Chromium, Firefox, and WebKit. Local
-runs use Playwright's worker allocation; CI uses one worker and up to two
-retries. Traces are collected on the first retry. Both HTML and Allure reports
-are enabled.
+`playwright.config.ts` runs the regression suite in Chromium, Firefox, and
+WebKit. A focused mobile Chromium project runs tests tagged `@mobile`, and
+accessibility checks are tagged `@accessibility`. Local runs use Playwright's
+worker allocation; CI uses one worker and up to two retries. Traces are
+collected on the first retry. Both HTML and Allure reports are enabled.
 
 CI runs the TypeScript check before the browser suite and uploads the
 Playwright HTML report, test artifacts, raw Allure results, and generated Allure
-report as one workflow artifact.
+report as one artifact retained for seven days. Retry and worker policy are
+configured in `playwright.config.ts`.
 
-The project contains nine test cases, executed across three browsers for 27
-test runs. CI executes eight non-destructive test cases across three browsers.
+The accessibility test currently uses an expected-failure marker because the
+hosted application has known violations reported by axe, including color
+contrast and missing document landmarks. The scan remains active so the marker
+can be removed when the application is fixed.
+
+The project contains 13 logical test cases. The desktop suite runs across
+Chromium, Firefox, and WebKit; the mobile smoke test runs on Pixel 5. CI
+executes 37 non-destructive test runs, including API, accessibility, and mobile
+coverage.
 It targets the configured environment:
 
 ```text

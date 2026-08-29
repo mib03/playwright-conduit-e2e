@@ -46,10 +46,14 @@ export class ArticlesApi {
         return body.article;
     }
 
-    async delete(slug: string): Promise<void> {
+    async delete(slug: string, options: { ignoreNotFound?: boolean } = {}): Promise<void> {
         const response = await this.request.delete(`${this.baseUrl}/api/articles/${slug}`, {
             headers: { Authorization: `Token ${this.token}` },
         });
+
+        if (options.ignoreNotFound && response.status() === 404) {
+            return;
+        }
 
         if (response.status() !== 204) {
             throw new Error(`Article deletion failed with HTTP ${response.status()}: ${await response.text()}`);

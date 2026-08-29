@@ -4,8 +4,19 @@ function getBaseUrl(name: string, fallback: string): string {
     const value = process.env[name] || fallback;
 
     try {
-        return new URL(value).toString().replace(/\/$/, '');
+        const url = new URL(value);
+        const isLocalhost = url.hostname === 'localhost' || url.hostname === '127.0.0.1';
+
+        if (url.protocol !== 'https:' && !(isLocalhost && url.protocol === 'http:')) {
+            throw new Error(`${name} must use HTTPS unless it targets localhost. Received: ${value}`);
+        }
+
+        return url.toString().replace(/\/$/, '');
     } catch {
+        if (value.startsWith('http://') && !value.includes('localhost') && !value.includes('127.0.0.1')) {
+            throw new Error(`${name} must use HTTPS unless it targets localhost. Received: ${value}`);
+        }
+
         throw new Error(`${name} must be a valid absolute URL. Received: ${value}`);
     }
 }

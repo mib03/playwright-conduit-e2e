@@ -1,37 +1,38 @@
 import { test, expect } from '../src/fixtures/page-fixtures';
-import { faker } from '@faker-js/faker';
+import { createArticleData } from '../src/data/article-factory';
 
 test.describe('Scenario 2: Article Lifecycle with API Login Injection', () => {
 
-    test('Creates an article through the authenticated UI', async ({ navPage, editorPage, articlePage, articleCleanup, page }) => {
+    test('@smoke @article Creates an article through the authenticated UI', async ({ navPage, editorPage, articlePage, articleCleanup, page }) => {
         await expect(navPage.yourFeedTab).toBeVisible();
         await expect(navPage.signInLink).not.toBeVisible();
 
-        const article = {
-            title: `Playwright article ${faker.string.alphanumeric(10)}`,
-            description: 'Article creation test description',
-            body: 'Article creation test body',
-            tagList: ['playwright'],
-        };
+        const article = createArticleData();
 
         await navPage.newArticleLink.click();
-        await editorPage.createArticle(article.title, article.description, article.body, article.tagList[0]);
+        const createResponsePromise = page.waitForResponse((response) =>
+            response.request().method() === 'POST' &&
+            new URL(response.url()).pathname.replace(/\/$/, '') === '/api/articles',
+        );
+        const createArticlePromise = editorPage.createArticle(article.title, article.description, article.body, article.tagList![0]);
+        const createResponse = await createResponsePromise;
+        await createArticlePromise;
+        expect(createResponse.status()).toBe(201);
 
+        const createdArticle = (await createResponse.json() as { article: { slug: string } }).article;
+        articleCleanup.track({ ...article, slug: createdArticle.slug });
+
+        await page.waitForURL(new RegExp(`/article/${createdArticle.slug}$`));
         const articlePath = new URL(page.url()).pathname;
         const createdSlug = articlePath.split('/').filter(Boolean).at(-1);
-        expect(createdSlug).toBeTruthy();
-        articleCleanup.track({ ...article, slug: createdSlug! });
+        expect(createdSlug).toBe(createdArticle.slug);
         await expect(articlePage.articleTitleHeading(article.title)).toBeVisible();
         await expect(articlePage.articleBody).toContainText(article.body);
+        await expect(articlePage.articleTags).toContainText(article.tagList![0]);
     });
 
-    test('@smoke Displays an API-created article on its detail page', async ({ articleCleanup, articlePage, articlesApi, page }) => {
-        const article = await articlesApi.create({
-            title: `API article ${faker.string.alphanumeric(10)}`,
-            description: 'Article read test description',
-            body: 'Article read test body',
-            tagList: ['api'],
-        });
+    test('@smoke @article Displays an API-created article on its detail page', async ({ articleCleanup, articlePage, articlesApi, page }) => {
+        const article = await articlesApi.create(createArticleData('api'));
         articleCleanup.track(article);
 
         await page.goto(`/article/${article.slug}`);
@@ -42,21 +43,18 @@ test.describe('Scenario 2: Article Lifecycle with API Login Injection', () => {
         await expect(articlePage.articleBody).toContainText(article.body);
     });
 
-    test('Deletes an API-created article through the UI', async ({ navPage, articleCleanup, articlePage, page, articlesApi }) => {
-        const article = await articlesApi.create({
-            title: `Delete article ${faker.string.alphanumeric(10)}`,
-            description: 'Article deletion test description',
-            body: 'Article deletion test body',
-            tagList: ['delete'],
-        });
+    test('@regression @article Deletes an API-created article through the UI', async ({ navPage, articleCleanup, articlePage, page, articlesApi }) => {
+        const article = await articlesApi.create(createArticleData('delete'));
         articleCleanup.track(article);
 
         await page.goto(`/article/${article.slug}`);
-        const deleteResponse = page.waitForResponse((response) =>
+        const [deleteResponse] = await Promise.all([
+            page.waitForResponse((response) =>
             response.request().method() === 'DELETE' && response.url().endsWith(`/api/articles/${article.slug}`),
-        );
-        await articlePage.deleteArticle();
-        expect((await deleteResponse).status()).toBe(204);
+            ),
+            articlePage.deleteArticle(),
+        ]);
+        expect(deleteResponse.status()).toBe(204);
         await navPage.yourFeedTab.waitFor();
         await expect(articlePage.articleHeading(article.title)).not.toBeVisible();
     });

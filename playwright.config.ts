@@ -25,15 +25,12 @@ export default defineConfig({
   fullyParallel: true,
   /* Fail the build on CI if you accidentally left test.only in the source code. */
   forbidOnly: isCI,
-  /* Retry on CI only */
+  /* Keep retry and worker policy centralized in this config. */
   retries: isCI ? 2 : 0,
   /* Opt out of parallel tests on CI. */
   workers: isCI ? 1 : undefined,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
-  reporter: [
-    ['html'],
-    ['allure-playwright']
-  ],
+  reporter: [['html'], ['allure-playwright']],
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     baseURL: appBaseUrl,
@@ -57,6 +54,12 @@ export default defineConfig({
     {
       name: 'webkit',
       use: { ...devices['Desktop Safari'] },
+    },
+
+    {
+      name: 'mobile-chromium',
+      grep: /@mobile/,
+      use: { ...devices['Pixel 5'] },
     },
 
     /* Test against mobile viewports. */
