@@ -37,6 +37,7 @@ npx playwright test tests/scenario2_article.spec.ts
 npx playwright test --project=chromium
 npm run test:smoke
 npm run test:ci
+npm run test:regression
 npm run test:destructive
 npm run test:firefox
 npm run test:webkit
@@ -44,6 +45,8 @@ npm run test:mobile
 npm run test:api
 npm run test:accessibility
 npm run test:report
+npm run format:check
+npm run format
 npx playwright test --ui
 npx playwright test --list
 npx playwright show-report
@@ -58,12 +61,13 @@ npm run allure:open
 
 ## Environment Variables
 
-| Variable | Purpose | Default |
-| --- | --- | --- |
-| `BASE_URL` | Web application URL | Hosted Conduit URL |
-| `API_URL` | API base URL | Hosted Conduit API URL |
-| `TEST_USER_EMAIL` | Existing test account email | Required |
-| `TEST_USER_PASSWORD` | Existing test account password | Required |
+| Variable             | Purpose                               | Default                |
+| -------------------- | ------------------------------------- | ---------------------- |
+| `BASE_URL`           | Web application URL                   | Hosted Conduit URL     |
+| `API_URL`            | API base URL                          | Hosted Conduit API URL |
+| `TEST_USER_EMAIL`    | Existing test account email           | Required               |
+| `TEST_USER_PASSWORD` | Existing test account password        | Required               |
+| `ACCESSIBILITY_GATE` | Fails accessibility tests when `true` | `false`                |
 
 The registration scenario is tagged `@destructive` because it creates a
 permanent user in the target environment. CI runs `npm run test:ci`, which
@@ -190,10 +194,10 @@ Playwright HTML report, test artifacts, raw Allure results, and generated Allure
 report as one artifact retained for seven days. Retry and worker policy are
 configured in `playwright.config.ts`.
 
-The accessibility test currently uses an expected-failure marker because the
-hosted application has known violations reported by axe, including color
-contrast and missing document landmarks. The scan remains active so the marker
-can be removed when the application is fixed.
+The accessibility test is report-only by default because the hosted application
+has known violations reported by axe, including color contrast and missing
+document landmarks. Set `ACCESSIBILITY_GATE=true` after those violations are
+remediated to make the scan blocking.
 
 The project contains 13 logical test cases. The desktop suite runs across
 Chromium, Firefox, and WebKit; the mobile smoke test runs on Pixel 5. CI

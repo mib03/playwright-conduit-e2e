@@ -9,14 +9,17 @@
     "test:firefox": "playwright test --project=firefox",
     "test:webkit": "playwright test --project=webkit",
     "test:mobile": "playwright test --project=mobile-chromium",
+    "test:regression": "playwright test --grep @regression --project=chromium",
     "test:api": "playwright test --grep @api --project=chromium",
     "test:smoke": "playwright test --grep @smoke --project=chromium",
     "test:accessibility": "playwright test --grep @accessibility --project=chromium",
-    "test:destructive": "playwright test --grep @destructive",
+    "test:destructive": "playwright test --grep @destructive --project=chromium",
     "test:ci": "playwright test --grep-invert @destructive",
     "test:ui": "playwright test --ui",
     "test:report": "playwright show-report",
     "typecheck": "tsc --noEmit",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "allure:generate": "allure generate allure-results --clean -o allure-report",
     "allure:open": "allure open allure-report",
     "allure:serve": "allure serve allure-results"
@@ -45,6 +48,7 @@
     "allure-commandline": "^2.43.0",
     "allure-playwright": "^3.10.2",
     "dotenv": "^17.4.2",
+    "prettier": "^3.9.7",
     "typescript": "^7.0.2"
   }
 }

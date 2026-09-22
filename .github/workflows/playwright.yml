@@ -2,9 +2,9 @@ name: Playwright Tests
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [main, master]
   pull_request:
-    branches: [ main, master ]
+    branches: [main, master]
 
 jobs:
   test:
@@ -13,51 +13,55 @@ jobs:
     permissions:
       contents: read
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    - uses: actions/setup-node@v4
-      with:
-        node-version: 20.19.x
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20.19.x
 
-    - name: Install dependencies
-      run: npm ci
+      - name: Install dependencies
+        run: npm ci
 
-    - name: Install Playwright Browsers
-      run: npx playwright install --with-deps
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps
 
-    - name: Type-check project
-      run: npm run typecheck
+      - name: Type-check project
+        run: npm run typecheck
 
-    - name: Validate test configuration
-      env:
-        TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL }}
-        TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
-      run: |
-        if [ -z "$TEST_USER_EMAIL" ] || [ -z "$TEST_USER_PASSWORD" ]; then
-          echo "Missing required GitHub Actions secrets: TEST_USER_EMAIL and TEST_USER_PASSWORD"
-          echo "Add them in Settings > Secrets and variables > Actions for this repository."
-          exit 1
-        fi
+      - name: Check formatting
+        run: npm run format:check
 
-    - name: Run Playwright tests
-      env:
-        BASE_URL: ${{ secrets.BASE_URL }}
-        API_URL: ${{ secrets.API_URL }}
-        TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL }}
-        TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
-      run: npm run test:ci
+      - name: Validate test configuration
+        env:
+          TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL }}
+          TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
+        run: |
+          if [ -z "$TEST_USER_EMAIL" ] || [ -z "$TEST_USER_PASSWORD" ]; then
+            echo "Missing required GitHub Actions secrets: TEST_USER_EMAIL and TEST_USER_PASSWORD"
+            echo "Add them in Settings > Secrets and variables > Actions for this repository."
+            exit 1
+          fi
 
-    - name: Generate Allure report
-      if: ${{ !cancelled() }}
-      run: npm run allure:generate
+      - name: Run Playwright tests
+        env:
+          BASE_URL: ${{ secrets.BASE_URL }}
+          API_URL: ${{ secrets.API_URL }}
+          TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL }}
+          TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
+          ACCESSIBILITY_GATE: false
+        run: npm run test:ci
 
-    - uses: actions/upload-artifact@v4
-      if: ${{ !cancelled() }}
-      with:
-        name: playwright-reports
-        path: |
-          playwright-report/
-          test-results/
-          allure-results/
-          allure-report/
-        retention-days: 7
+      - name: Generate Allure report
+        if: ${{ !cancelled() }}
+        run: npm run allure:generate
+
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-reports
+          path: |
+            playwright-report/
+            test-results/
+            allure-results/
+            allure-report/
+          retention-days: 7

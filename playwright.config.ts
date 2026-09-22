@@ -1,8 +1,8 @@
-import 'dotenv/config';
-import { defineConfig, devices } from '@playwright/test';
-import { appBaseUrl } from './src/config/test-config';
+import "dotenv/config";
+import { defineConfig, devices } from "@playwright/test";
+import { appBaseUrl } from "./src/config/test-config";
 
-const isCI = process.env.CI === 'true';
+const isCI = process.env.CI === "true";
 
 /**
  * Read environment variables from file.
@@ -16,7 +16,7 @@ const isCI = process.env.CI === 'true';
  * See https://playwright.dev/docs/test-configuration.
  */
 export default defineConfig({
-  testDir: './tests',
+  testDir: "./tests",
   timeout: 30_000,
   expect: {
     timeout: 5_000,
@@ -30,36 +30,39 @@ export default defineConfig({
   /* Opt out of parallel tests on CI. */
   workers: isCI ? 1 : undefined,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
-  reporter: [['html'], ['allure-playwright']],
+  reporter: [["html"], ["allure-playwright"]],
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     baseURL: appBaseUrl,
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
-    trace: 'on-first-retry',
+    trace: "on-first-retry",
   },
 
   /* Configure projects for major browsers */
   projects: [
     {
-      name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      name: "chromium",
+      grepInvert: /@mobile/,
+      use: { ...devices["Desktop Chrome"] },
     },
 
     {
-      name: 'firefox',
-      use: { ...devices['Desktop Firefox'] },
+      name: "firefox",
+      grepInvert: /@mobile/,
+      use: { ...devices["Desktop Firefox"] },
     },
 
     {
-      name: 'webkit',
-      use: { ...devices['Desktop Safari'] },
+      name: "webkit",
+      grepInvert: /@mobile/,
+      use: { ...devices["Desktop Safari"] },
     },
 
     {
-      name: 'mobile-chromium',
+      name: "mobile-chromium",
       grep: /@mobile/,
-      use: { ...devices['Pixel 5'] },
+      use: { ...devices["Pixel 5"] },
     },
 
     /* Test against mobile viewports. */
